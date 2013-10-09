@@ -1,0 +1,48 @@
+<?php
+
+class AccessUnpublishedPagesPerUser extends WireData implements Module{
+	public static function getModuleInfo(){
+		return Array(
+			'title' => 'Per-user Unpublished Page Access',
+			'summary' => 'Adds field to user page allowing selection of specific unpublished pages they can access via URL.',
+			'version' => 100,
+			'author' => 'Wes',
+			'singular' => true,
+			'autoload' => true
+		);
+	}
+	
+	public function init(){
+		// hook after Page::viewable
+		$this->addHookAfter('Page::viewable', $this, 'checkViewable');
+	}
+	
+	public function checkViewable($event){
+		// if it's already viewable, just return true
+		if($event->return)
+			return true;
+			
+		$page = $event->arguments('page');
+		
+		//if page isn't unpublished, return false
+		if(!$page->is(Page::statusPublished))
+			return false;
+		
+		// if the user has the page in their viewable field, give em access
+		if($this->user->viewable_pages->has($page))
+			return true;
+		else
+			return false;
+	}
+	
+	// intially add the field to the user template
+	public function ___install(){
+		
+	}
+	
+	// undo field addition to user template
+	public function ___uninstall(){
+	}
+}
+
+?>
